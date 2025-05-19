@@ -7,7 +7,7 @@ async function connectToWhatsApp() {
     printQRInTerminal: true,
     browser: ["windows", "chrome", "11"],
     auth: authState.state,
-    logger: pino({ level: "silent" }),
+    logger: pino({ level: "debug" }),
   });
 
   socket.ev.on("creds.update", authState.saveCreds);
