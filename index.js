@@ -1,5 +1,6 @@
 const { makeWASocket, useMultiFileAuthState } = require("baileys");
 const pino = require("pino");
+const { DisconnectReason } = require("@whiskeysockets/baileys");
 
 async function connectToWhatsApp() {
   const authState = await useMultiFileAuthState("session");
@@ -11,17 +12,26 @@ async function connectToWhatsApp() {
   });
 
   socket.ev.on("creds.update", authState.saveCreds);
-  socket.ev.on("connection.update", ({ connection, qr }) => {
-    if (connection == "open") {
-      console.log("WhatsApp Active...");
-    } else if (connection == "close") {
-      console.log("WhatsApp Closed...");
-      connectToWhatsApp();
-    } else if ((connection = "connecting")) {
-      console.log("WhatsApp Connecting...");
+  socket.ev.on("connection.update", ({ connection, lastDisconnect, qr }) => {
+    if (connection === "open") {
+      console.log("✅ WhatsApp Active...");
+    } else if (connection === "close") {
+      const shouldReconnect =
+        lastDisconnect?.error?.output?.statusCode !==
+        DisconnectReason.loggedOut;
+      console.log("❌ WhatsApp Closed...", { shouldReconnect });
+
+      if (shouldReconnect) {
+        connectToWhatsApp(); // ✅ Reconnect hanya jika tidak logout
+      } else {
+        console.log("💡 Anda telah logout dari WhatsApp. Harap scan ulang QR.");
+      }
+    } else if (connection === "connecting") {
+      console.log("🔄 WhatsApp Connecting...");
     }
+
     if (qr) {
-      console.log(qr);
+      console.log("📱 QR Code:", qr);
     }
   });
 
