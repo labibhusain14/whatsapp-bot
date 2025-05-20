@@ -8,7 +8,7 @@ async function connectToWhatsApp() {
     printQRInTerminal: true,
     browser: ["windows", "chrome", "11"],
     auth: authState.state,
-    logger: pino({ level: "debug" }),
+    logger: pino({ level: "silent" }),
   });
 
   socket.ev.on("creds.update", authState.saveCreds);
@@ -61,7 +61,7 @@ async function connectToWhatsApp() {
 
 async function query(data) {
   const response = await fetch(
-    "https://flowise-1055774796130.asia-southeast2.run.app/api/v1/prediction/e04752a5-7480-49af-a1db-912076a5d246",
+    "https://flowise-1055774796130.asia-southeast2.run.app/api/v1/prediction/3ed966b2-8de8-45e8-a308-ed432205b9bf",
     {
       method: "POST",
       headers: {
