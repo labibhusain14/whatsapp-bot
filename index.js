@@ -13,48 +13,62 @@ async function connectToWhatsApp() {
 
   socket.ev.on("creds.update", authState.saveCreds);
   socket.ev.on("connection.update", ({ connection, lastDisconnect, qr }) => {
-    if (connection === "open") {
-      console.log("✅ WhatsApp Active...");
-    } else if (connection === "close") {
-      const shouldReconnect =
-        lastDisconnect?.error?.output?.statusCode !==
-        DisconnectReason.loggedOut;
-      console.log("❌ WhatsApp Closed...", { shouldReconnect });
+    try {
+      if (connection === "open") {
+        console.log("✅ WhatsApp Active...");
+      } else if (connection === "close") {
+        const shouldReconnect =
+          lastDisconnect?.error?.output?.statusCode !==
+          DisconnectReason.loggedOut;
+        console.log("❌ WhatsApp Closed...", { shouldReconnect });
 
-      if (shouldReconnect) {
-        connectToWhatsApp(); // ✅ Reconnect hanya jika tidak logout
-      } else {
-        console.log("💡 Anda telah logout dari WhatsApp. Harap scan ulang QR.");
+        if (shouldReconnect) {
+          connectToWhatsApp();
+        } else {
+          console.log(
+            "💡 Anda telah logout dari WhatsApp. Harap scan ulang QR."
+          );
+        }
+      } else if (connection === "connecting") {
+        console.log("🔄 WhatsApp Connecting...");
       }
-    } else if (connection === "connecting") {
-      console.log("🔄 WhatsApp Connecting...");
-    }
 
-    if (qr) {
-      console.log("📱 QR Code:", qr);
+      if (qr) {
+        console.log("📱 QR Code:", qr);
+      }
+    } catch (err) {
+      console.error("❌ Error di connection.update:", err);
     }
   });
 
   socket.ev.on("messages.upsert", ({ messages }) => {
     console.log(messages);
     let pesan = "";
-    // Deteksi jenis pesan yang masuk
-    if (messages[0].message?.conversation) {
-      pesan = messages[0].message.conversation;
-    } else if (messages[0].message?.extendedTextMessage?.text) {
-      pesan = messages[0].message.extendedTextMessage.text;
-    } else {
-      console.log("Jenis pesan tidak dikenali:", messages[0].message);
-      return;
-    }
 
-    const phone = messages[0].key.remoteJid;
-    if (!messages[0].key.fromMe) {
-      query({ question: pesan }).then(async (response) => {
-        console.log(response);
-        const { text } = response;
-        await socket.sendMessage(phone, { text: text });
-      });
+    if (!messages || !messages[0]?.message) return;
+
+    // Tangani hanya jenis pesan tertentu
+    try {
+      if (messages[0].message.conversation) {
+        pesan = messages[0].message.conversation;
+      } else if (messages[0].message.extendedTextMessage?.text) {
+        pesan = messages[0].message.extendedTextMessage.text;
+      } else {
+        console.log("Jenis pesan tidak dikenali:", messages[0].message);
+        return;
+      }
+
+      const phone = messages[0].key.remoteJid;
+
+      if (!messages[0].key.fromMe) {
+        query({ question: pesan }).then(async (response) => {
+          console.log(response);
+          const { text } = response;
+          await socket.sendMessage(phone, { text: text });
+        });
+      }
+    } catch (err) {
+      console.error("❌ Error saat memproses pesan:", err);
     }
   });
 }
