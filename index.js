@@ -75,7 +75,7 @@ async function connectToWhatsApp() {
 
 async function query(data) {
   const response = await fetch(
-    "https://flowise-1055774796130.asia-southeast2.run.app/api/v1/prediction/3ed966b2-8de8-45e8-a308-ed432205b9bf",
+    "https://flowise-1055774796130.asia-southeast2.run.app/api/v1/prediction/142209a8-1a69-4412-b353-e414cb14f232",
     {
       method: "POST",
       headers: {
